@@ -27,6 +27,10 @@ class TaskPool {
         }
     }
 
+    virtual ~TaskPool() {
+        Stop();
+    }
+
     bool PushTask(std::function<void()> func) {
         TaskWrap kItem;
         kItem.func = std::move(func);
@@ -49,11 +53,26 @@ class TaskPool {
                 try {
                     kItem.func();
                 } catch (std::exception e) {
-                    std::cout << e.what() << "\n";
+                    //std::cout << e.what() << "\n";
                 } catch (...) {
                     //LOG_E("");
-                    std::cout << "[catch] receive TaskThread\n";
+                    //std::cout << "[catch] receive TaskThread\n";
                 }
+            }
+        }
+    }
+    void Stop() {
+        m_bRun = false;
+
+        for (int i = 0; i <= m_Threads.size(); i++) {
+            TaskWrap kItem;
+            kItem.eType = TaskWrap::eTaskStop;
+            m_queTask.Push(kItem);
+        }
+
+        for (auto& pThread : m_Threads) {
+            if (pThread->joinable()) {
+                pThread->join();
             }
         }
     }
@@ -62,4 +81,4 @@ class TaskPool {
     std::atomic<bool> m_bRun = false;
     std::vector<std::unique_ptr<std::thread>> m_Threads;
 };
-}
+} // namespace xs

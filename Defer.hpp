@@ -7,7 +7,7 @@ namespace xs {
 class Defer {
   public:
     Defer(const std::function<void()>&& f)
-        : _f(std::move(f)) {
+        : _f(f) {
     }
 
     ~Defer() {

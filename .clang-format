@@ -1,0 +1,23 @@
+---
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# 语言: None, Cpp, Java, JavaScript, ObjC, Proto, TableGen, TextProto
+Language: Cpp
+# LLVM, Google, Chromium, Mozilla, WebKit, Microsoft
+BasedOnStyle: LLVM
+AllowShortEnumsOnASingleLine: true
+# 连续宏对齐
+AlignConsecutiveMacros: true
+# 每行字符的限制，0表示没有限制
+ColumnLimit: 0
+# 指针和引用的对齐: Left, Right, Middle
+PointerAlignment: Left
+# 允许短的块放在同一行
+# AllowShortBlocksOnASingleLine: false
+# 允许短的函数放在同一行: None, InlineOnly(定义在类中), Empty(空函数), Inline(定义在类中，空函数), All
+# AllowShortFunctionsOnASingleLine: Empty
+# 缩进宽度
+IndentWidth: 4
+# # 允许排序#include
+SortIncludes: false
+# # 允许重新排版注释
+ReflowComments: false
