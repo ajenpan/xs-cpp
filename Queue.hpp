@@ -17,9 +17,12 @@ class Queue {
         return true;
     }
 
-    bool Pop(T& t) {
+    bool WaitPop(T& t) {
         m_kSignal.Wait();
+        return Pop(t);
+    }
 
+    bool Pop(T& t) {
         AutoLock kLock(m_kMutex);
         if (m_queue.empty()) {
             return false;
@@ -34,7 +37,7 @@ class Queue {
         return m_queue.size();
     }
 
-    void Clean() {
+    void Clear() {
         AutoLock kLock(m_kMutex);
         std::queue<T> _temp;
         m_queue.swap(_temp);
@@ -45,4 +48,4 @@ class Queue {
     Signal m_kSignal;
     Lock m_kMutex;
 };
-}
+} // namespace xs

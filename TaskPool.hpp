@@ -50,14 +50,7 @@ class TaskPool {
                 return;
             }
             if (kItem.func) {
-                try {
-                    kItem.func();
-                } catch (std::exception e) {
-                    //std::cout << e.what() << "\n";
-                } catch (...) {
-                    //LOG_E("");
-                    //std::cout << "[catch] receive TaskThread\n";
-                }
+                kItem.func();
             }
         }
     }
@@ -78,7 +71,7 @@ class TaskPool {
     }
 
     Queue<TaskWrap> m_queTask;
-    std::atomic<bool> m_bRun = false;
+    std::atomic<bool> m_bRun;
     std::vector<std::unique_ptr<std::thread>> m_Threads;
 };
 } // namespace xs

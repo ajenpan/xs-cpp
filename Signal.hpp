@@ -7,6 +7,9 @@
 namespace xs {
 class Signal final {
   public:
+    Signal()
+        : m_nCargo(0) {
+    }
     void Wait() {
         std::unique_lock<std::mutex> kLock(m_kMutex);
         m_kCondition.wait(kLock, [this]() -> bool {
@@ -22,7 +25,7 @@ class Signal final {
 
   protected:
     std::mutex m_kMutex;
-    std::atomic_int m_nCargo = 0;
+    std::atomic<int32_t> m_nCargo;
     std::condition_variable m_kCondition;
 };
-}
+} // namespace xs
