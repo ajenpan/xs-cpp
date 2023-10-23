@@ -21,3 +21,4 @@ IndentWidth: 4
 SortIncludes: false
 # # 允许重新排版注释
 ReflowComments: false
+FixNamespaceComments: false
