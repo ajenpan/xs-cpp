@@ -42,7 +42,7 @@ class TaskPool {
     void OnWork() {
         TaskWrap kItem;
         while (m_bRun) {
-            if (!m_queTask.Pop(kItem)) {
+            if (!m_queTask.WaitPop(kItem)) {
                 continue;
             }
 
