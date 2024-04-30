@@ -7,7 +7,6 @@
 #include <queue>
 /*
 Author: Ajen
-Mail: ajenpan@gmail.com
 Date: 20160815
 */
 namespace xs {
@@ -234,6 +233,7 @@ class Timer {
             }
         } while (true);
     }
+
     void TransferTask() {
         AutoLock k(m_lock);
         while (!m_cache.empty()) {

@@ -1,51 +1,50 @@
 #pragma once
 
-#include <stdint.h>
 #include <queue>
+#include <mutex>
 
 #include "Signal.hpp"
-#include "Lock.hpp"
 
 namespace xs {
 template <typename T>
 class Queue {
   public:
     bool Push(const T& t) {
-        AutoLock kLock(m_kMutex);
-        m_queue.push(t);
-        m_kSignal.Notify();
+        std::lock_guard<std::mutex> kLock(_lock);
+        _queue.push(t);
+        _signal.Notify();
         return true;
     }
 
     bool WaitPop(T& t) {
-        m_kSignal.Wait();
+        _signal.Wait();
         return Pop(t);
     }
 
     bool Pop(T& t) {
-        AutoLock kLock(m_kMutex);
-        if (m_queue.empty()) {
+        std::lock_guard<std::mutex> kLock(_lock);
+        if (_queue.empty()) {
             return false;
         }
-        t = std::move(m_queue.front());
-        m_queue.pop();
+        t = std::move(_queue.front());
+        _queue.pop();
         return true;
     }
 
     int Size() const {
-        AutoLock kLock(m_kMutex);
-        return m_queue.size();
+        std::lock_guard<std::mutex> kLock(_lock);
+        return _queue.size();
     }
 
     void Clear() {
-        AutoLock kLock(m_kMutex);
+        std::lock_guard<std::mutex> kLock(_lock);
         std::queue<T> _temp;
-        m_queue.swap(_temp);
+        _queue.swap(_temp);
     }
 
   private:
-    std::queue<T> m_queue;
-    Signal m_kSignal;
-    Lock m_kMutex;
+    std::queue<T> _queue;
+    Signal _signal;
+    std::mutex _lock;
 };
 } // namespace xs

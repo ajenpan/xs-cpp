@@ -8,24 +8,24 @@ namespace xs {
 class Signal final {
   public:
     Signal()
-        : m_nCargo(0) {
+        : _cargo(0) {
     }
     void Wait() {
-        std::unique_lock<std::mutex> kLock(m_kMutex);
-        m_kCondition.wait(kLock, [this]() -> bool {
-            return m_nCargo > 0;
+        std::unique_lock<std::mutex> kLock(_lock);
+        _condition.wait(kLock, [this]() -> bool {
+            return _cargo > 0;
         });
-        --m_nCargo;
+        --_cargo;
     }
     void Notify() {
-        std::lock_guard<std::mutex> kLock(m_kMutex);
-        ++m_nCargo;
-        m_kCondition.notify_one();
+        std::lock_guard<std::mutex> kLock(_lock);
+        ++_cargo;
+        _condition.notify_one();
     }
 
   protected:
-    std::mutex m_kMutex;
-    std::atomic<int32_t> m_nCargo;
-    std::condition_variable m_kCondition;
+    std::mutex _lock;
+    std::atomic<int32_t> _cargo;
+    std::condition_variable _condition;
 };
 } // namespace xs
