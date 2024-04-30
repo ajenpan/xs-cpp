@@ -72,8 +72,9 @@ class Timer {
         int32_t nRepeat = 1;
         Seconds nDelayTime = Seconds(0);
         Seconds nInterval = Seconds(1);
-        std::function<void()> funcCallback;
+        std::function<void()> funcCallback = nullptr;
         TimePoint nNextCallTime;
+        bool bCancel = false;
 
         bool IsPunctual(const TimePoint& nNow) {
             return nNow >= nNextCallTime;
@@ -224,10 +225,12 @@ class Timer {
             if (!pTop->IsPunctual(nNow)) {
                 break;
             }
-            if (pTop->funcCallback) {
+            if (!pTop->bCancel && pTop->funcCallback) {
                 pTop->funcCallback();
             }
+
             m_queue.pop();
+
             if (pTop->UpdataNextCallTime(nNow)) {
                 m_queue.push(pTop);
             }
