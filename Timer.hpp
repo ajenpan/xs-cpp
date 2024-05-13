@@ -65,16 +65,37 @@ class Timer {
     static TimePoint NowTime() {
         return std::chrono::system_clock::now();
     }
+    struct Task {
+        virtual bool Cancel() = 0;
+    };
 
     struct TimeTask;
     typedef std::shared_ptr<TimeTask> TimeTaskPtr;
-    struct TimeTask {
+
+    struct TimeTask : public Task {
         int32_t nRepeat = 1;
         Seconds nDelayTime = Seconds(0);
         Seconds nInterval = Seconds(1);
-        std::function<void()> funcCallback = nullptr;
+        std::function<void()> fnCallback = nullptr;
         TimePoint nNextCallTime;
-        bool bCancel = false;
+        std::atomic_bool bCancel = {false};
+
+        virtual bool Cancel() override {
+            bCancel.store(true);
+            return true;
+        }
+
+        bool Call() {
+            if (bCancel.load() || !fnCallback) {
+                return false;
+            }
+            fnCallback();
+            return true;
+        }
+
+        void Clear() {
+            fnCallback = nullptr;
+        }
 
         bool IsPunctual(const TimePoint& nNow) {
             return nNow >= nNextCallTime;
@@ -82,6 +103,9 @@ class Timer {
 
         bool UpdataNextCallTime(const TimePoint& nNow) {
             if (nRepeat == 0) {
+                return false;
+            }
+            if (bCancel) {
                 return false;
             }
 
@@ -182,34 +206,32 @@ class Timer {
     };
 
   public:
-    bool After(uint32_t nDelayTime, const std::function<void()>& func) {
-        auto pTask = std::make_shared<TimeTask>();
-        pTask->funcCallback = func;
-        pTask->nDelayTime = Seconds(nDelayTime);
-        pTask->nInterval = Seconds(1);
+    static std::shared_ptr<Task> After(uint32_t nDelaySec, const std::function<void()>& func) {
+        auto pTask = Instace().NewTask();
+        pTask->fnCallback = func;
+        pTask->nDelayTime = Seconds(nDelaySec);
+        pTask->nInterval = Seconds(0);
         pTask->nRepeat = 1;
         pTask->UpdataNextCallTime(NowTime());
-        return AddTask(pTask);
+        return pTask;
     }
 
-    bool Schedule(const std::function<void()>& func, Seconds nInterval, int32_t nRepeat = -1, Seconds nDelayTime = Seconds(0)) {
+    static std::shared_ptr<Task> Schedule(const std::function<void()>& func, Seconds nInterval, int32_t nRepeat = -1, Seconds nDelayTime = Seconds(0)) {
         if (!func || nInterval.count() < 0 || nRepeat == 0 || nDelayTime.count() < 0) {
-            return false;
+            return nullptr;
         }
-
-        auto pTask = std::make_shared<TimeTask>();
-        pTask->funcCallback = func;
+        auto pTask = Instace().NewTask();
+        pTask->fnCallback = func;
         pTask->nInterval = nInterval;
         pTask->nRepeat = nRepeat;
         pTask->nDelayTime = nDelayTime;
         pTask->UpdataNextCallTime(NowTime());
-        return AddTask(pTask);
+        return pTask;
     }
 
-    bool AddTask(TimeTaskPtr pTask) {
+    void AddTask(TimeTaskPtr pTask) {
         AutoLock k(m_lock);
         m_cache.emplace(pTask);
-        return true;
     }
 
     void OnTime() {
@@ -225,14 +247,16 @@ class Timer {
             if (!pTop->IsPunctual(nNow)) {
                 break;
             }
-            if (!pTop->bCancel && pTop->funcCallback) {
-                pTop->funcCallback();
-            }
+
+            pTop->Call();
 
             m_queue.pop();
 
             if (pTop->UpdataNextCallTime(nNow)) {
                 m_queue.push(pTop);
+                // AddTask(pTop);
+            } else {
+                pTop->Clear();
             }
         } while (true);
     }
@@ -243,6 +267,12 @@ class Timer {
             m_queue.push(m_cache.front());
             m_cache.pop();
         }
+    }
+
+    TimeTaskPtr NewTask() {
+        auto pTask = std::make_shared<TimeTask>();
+        AddTask(pTask);
+        return pTask;
     }
 
     Lock m_lock;
