@@ -11,11 +11,17 @@ class Defer {
     }
 
     ~Defer() {
-        if (_f) {
+        if (_f && !_cancel) {
             _f();
             _f = nullptr;
         }
     }
+
+    void Cancel() {
+        _cancel = true;
+    }
+
+    bool _cancel = false;
     std::function<void()> _f;
 };
 

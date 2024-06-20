@@ -102,13 +102,12 @@ class Timer {
         }
 
         bool UpdataNextCallTime(const TimePoint& nNow) {
-            if (nRepeat == 0) {
-                return false;
-            }
             if (bCancel) {
                 return false;
             }
-
+            if (nRepeat == 0) {
+                return false;
+            }
             if (nDelayTime.count() != 0) {
                 nNextCallTime = nNow + nDelayTime;
                 nDelayTime = TimeDuration(0);
@@ -216,6 +215,16 @@ class Timer {
         return pTask;
     }
 
+    // static std::shared_ptr<Task> Until(std::time_t ts, const std::function<void()>& func) {
+    //     auto pTask = Instace().NewTask();
+    //     pTask->fnCallback = func;
+    //     pTask->nDelayTime = 0;
+    //     pTask->nInterval = Seconds(0);
+    //     pTask->nRepeat = 0;
+    //     pTask->nNextCallTime = std::chrono::system_clock::from_time_t(ts);
+    //     return pTask;
+    // }
+
     static std::shared_ptr<Task> Schedule(const std::function<void()>& func, Seconds nInterval, int32_t nRepeat = -1, Seconds nDelayTime = Seconds(0)) {
         if (!func || nInterval.count() < 0 || nRepeat == 0 || nDelayTime.count() < 0) {
             return nullptr;
@@ -236,6 +245,7 @@ class Timer {
 
     void OnTime() {
         TransferTask();
+        TimePoint nNow = NowTime();
 
         do {
             if (m_queue.empty()) {
@@ -243,7 +253,6 @@ class Timer {
             }
             auto pTop = m_queue.top();
 
-            TimePoint nNow = NowTime();
             if (!pTop->IsPunctual(nNow)) {
                 break;
             }
@@ -253,8 +262,7 @@ class Timer {
             m_queue.pop();
 
             if (pTop->UpdataNextCallTime(nNow)) {
-                m_queue.push(pTop);
-                // AddTask(pTop);
+                AddTask(pTop);
             } else {
                 pTop->Clear();
             }
