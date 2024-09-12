@@ -47,7 +47,7 @@ class ObjectPoolT {
     }
 
   private:
-    size_t _cache_max_cnt = 8096;
+    size_t _cache_max_cnt = 100;
     std::stack<T*> _cache;
     ClearFunc _cleaner = nullptr;
 };

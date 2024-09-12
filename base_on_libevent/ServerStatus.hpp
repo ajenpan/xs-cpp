@@ -2,9 +2,21 @@
 
 #include <atomic>
 
-#include "Utility.hpp"
+#ifndef H_CASE_STRING_BIGIN
+#define H_CASE_STRING_BIGIN(state) switch (state) {
+#define H_CASE_STRING(state) \
+    case state:              \
+        return #state;       \
+        break;
+#define H_CASE_STRING_END() \
+    default:                \
+        return "Unknown";   \
+        break;              \
+        }
+#endif
 
 namespace base_on_libevent {
+
 class ServerStatus {
   public:
     enum Status : uint8_t {
@@ -17,14 +29,8 @@ class ServerStatus {
         kStopped = 6,
     };
 
-    enum SubStatus {
-        kSubStatusNull = 0,
-        kStoppingListener = 1,
-        kStoppingThreadPool = 2,
-    };
-
     std::string StatusToString() const {
-        H_CASE_STRING_BIGIN(status_.load());
+        H_CASE_STRING_BIGIN(_status.load());
         H_CASE_STRING(kNull);
         H_CASE_STRING(kInitialized);
         H_CASE_STRING(kRunning);
@@ -34,19 +40,18 @@ class ServerStatus {
     }
 
     bool IsRunning() const {
-        return status_.load() == kRunning;
+        return _status.load() == kRunning;
     }
 
     bool IsStopped() const {
-        return status_.load() == kStopped;
+        return _status.load() == kStopped;
     }
 
     bool IsStopping() const {
-        return status_.load() == kStopping;
+        return _status.load() == kStopping;
     }
 
   protected:
-    std::atomic<Status> status_ = {kNull};
-    std::atomic<SubStatus> substatus_ = {kSubStatusNull};
+    std::atomic<Status> _status = {kNull};
 };
 }

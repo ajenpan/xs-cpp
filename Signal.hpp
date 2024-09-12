@@ -17,6 +17,18 @@ class Signal final {
         });
         --_cargo;
     }
+
+    bool WaitFor(std::chrono::milliseconds d) {
+        std::unique_lock<std::mutex> kLock(_lock);
+        bool ok = _condition.wait_for(kLock, d, [this]() -> bool {
+            return _cargo > 0;
+        });
+        if (ok) {
+            --_cargo;
+        }
+        return ok;
+    }
+
     void Notify() {
         std::lock_guard<std::mutex> kLock(_lock);
         ++_cargo;
