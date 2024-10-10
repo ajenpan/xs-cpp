@@ -5,7 +5,7 @@
 #include <vector>
 #include <algorithm>
 
-namespace strutils {
+namespace xs {
 inline std::string& Trim(std::string& _str, std::string strTrim, bool _left = true, bool _right = true) {
     if (_right)
         _str.erase(_str.find_last_not_of(strTrim) + 1);
